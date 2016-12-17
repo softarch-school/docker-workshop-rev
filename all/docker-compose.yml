@@ -1,0 +1,76 @@
+# Simple demo for the whole GitLab CE stack.
+# #
+# Adapted from: https://github.com/sameersbn/docker-gitlab/blob/master/docker-compose.yml
+#
+
+version: '2'
+
+services:
+  redis:
+    restart: always
+    image: redis-mini
+    command:
+    - --loglevel warning
+
+  postgresql:
+    restart: always
+    image: my-pgsql
+    volumes:
+    - ./pgsql-data:/var/lib/postgresql:Z
+    environment:
+    - POSTGRES_USER=gitlab
+    - POSTGRES_PASSWORD=password
+    - POSTGRES_DB=gitlabhq_production
+
+
+  gitlab:
+    restart: always
+    image: sameersbn/gitlab:8.14.5
+    depends_on:
+    - redis
+    - postgresql
+    ports:
+    - "10080:80"
+    - "10022:22"
+    volumes:
+    - ./gitlab-data:/home/git/data:Z
+    environment:
+    - DEBUG=false
+
+    - DB_ADAPTER=postgresql
+    - DB_HOST=postgresql
+    - DB_PORT=5432
+    - DB_USER=gitlab
+    - DB_PASS=password
+    - DB_NAME=gitlabhq_production
+
+    - REDIS_HOST=redis
+    - REDIS_PORT=6379
+
+    - GITLAB_HTTPS=false
+    - SSL_SELF_SIGNED=false
+
+    - GITLAB_HOST=localhost
+    - GITLAB_PORT=10080
+    - GITLAB_SSH_PORT=10022
+    - GITLAB_RELATIVE_URL_ROOT=
+    - GITLAB_SECRETS_DB_KEY_BASE=long-and-random-alphanumeric-string
+    - GITLAB_SECRETS_SECRET_KEY_BASE=long-and-random-alphanumeric-string
+    - GITLAB_SECRETS_OTP_KEY_BASE=long-and-random-alphanumeric-string
+
+    - GITLAB_ROOT_PASSWORD=
+    - GITLAB_ROOT_EMAIL=
+
+    - GITLAB_NOTIFY_ON_BROKEN_BUILDS=true
+    - GITLAB_NOTIFY_PUSHER=false
+
+    - GITLAB_EMAIL=notifications@example.com
+    - GITLAB_EMAIL_REPLY_TO=noreply@example.com
+    - GITLAB_INCOMING_EMAIL_ADDRESS=reply@example.com
+
+    - GITLAB_BACKUP_SCHEDULE=daily
+    - GITLAB_BACKUP_TIME=01:00
+
+    - SMTP_ENABLED=false
+    - IMAP_ENABLED=false
+    - OAUTH_ENABLED=false
