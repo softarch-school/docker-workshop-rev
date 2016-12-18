@@ -10,3 +10,4 @@ EXPOSE 6379
 
 
 ENTRYPOINT ["redis-server"]
+CMD ["/etc/redis/redis.conf"]
