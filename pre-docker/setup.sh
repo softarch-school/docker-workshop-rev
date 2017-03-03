@@ -8,13 +8,13 @@
 
 # Constants
 
-GIT_VERSION=2.8.4
-#GIT_VERSION=2.7.4
+GIT_VERSION=2.12.0
+#GIT_VERSION=2.8.4
 GIT_TARBALL_URL=https://www.kernel.org/pub/software/scm/git/git-$GIT_VERSION.tar.gz
 RUBY_VERSION=2.3.3
 RUBY_TARBALL_URL=https://cache.ruby-lang.org/pub/ruby/ruby-$RUBY_VERSION.tar.gz
-GO_VERSION=1.5.3
-GITLAB_VERSION=8-14-stable
+GO_VERSION=1.7.4
+GITLAB_VERSION=8-16-stable
 
 
 
@@ -94,53 +94,65 @@ rm go$GO_VERSION.linux-amd64.tar.gz
 
 
 echo "===================================================================="
-echo "==> 4 - System Users"
+echo "==> 4 - Node.js"
 
-echo "--> 4.1 - Create a git user for GitLab"
+echo "--> 4.1 - install node v7.x"
+curl --silent https://deb.nodesource.com/setup_7.x | bash -
+sudo apt-get install -y nodejs
+
+echo "--> 4.2 - install yarn"
+curl --silent https://yarnpkg.com/install.sh | bash -
+
+
+
+echo "===================================================================="
+echo "==> 5 - System Users"
+
+echo "--> 5.1 - Create a git user for GitLab"
 sudo adduser --disabled-login --gecos 'GitLab' git
 
 
 
 echo "===================================================================="
-echo "==> 5 - Database"
+echo "==> 6 - Database"
 
 
-echo "--> 5.1 - Install the database packages"
+echo "--> 6.1 - Install the database packages"
 sudo apt-get install -y postgresql postgresql-client libpq-dev postgresql-contrib
 
-echo "--> 5.2 - Create a database user for GitLab"
+echo "--> 6.2 - Create a database user for GitLab"
 sudo -u postgres psql -d template1 -c "CREATE USER git CREATEDB;"
 
-echo "--> 5.3 - Create the pg_trgm extension (required for GitLab 8.6+)"
+echo "--> 6.3 - Create the pg_trgm extension (required for GitLab 8.6+)"
 sudo -u postgres psql -d template1 -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 
-echo "--> 5.4 - Create the GitLab production database and grant all privileges on database"
+echo "--> 6.4 - Create the GitLab production database and grant all privileges on database"
 sudo -u postgres psql -d template1 -c "CREATE DATABASE gitlabhq_production OWNER git;"
 
-#echo "--> 5.5 - Try connecting to the new database with the new user,"
+#echo "--> 6.5 - Try connecting to the new database with the new user,"
 #echo "-->       and Check if the pg_trgm extension is enabled"
 
 
 
 echo "===================================================================="
-echo "==> 6 - Redis"
+echo "==> 7 - Redis"
 
-echo "--> 6.1 - GitLab requires at least Redis 2.8."
+echo "--> 7.1 - GitLab requires at least Redis 2.8."
 sudo apt-get install -y redis-server
 
 
 echo "===================================================================="
-echo "==> 7 - GitLab"
+echo "==> 8 - GitLab"
 
-echo "--> 7.1 - We'll install GitLab into home directory of the user 'git' "
+echo "--> 8.1 - We'll install GitLab into home directory of the user 'git' "
 cd /home/git
 
 
-echo "--> 7.2 - Clone GitLab repository"
+echo "--> 8.2 - Clone GitLab repository"
 sudo -u git -H git clone https://gitlab.com/gitlab-org/gitlab-ce.git -b $GITLAB_VERSION gitlab
 
 
-echo "--> 7.3 - Configure GitLab..."
+echo "--> 8.3 - Configure GitLab..."
 
 # Go to GitLab installation folder
 cd /home/git/gitlab
@@ -211,7 +223,7 @@ sudo -u git -H sed -i -e 's/  url:.*/  url: redis:\/\/0.0.0.0:6379/g'  config/re
 
 
 
-echo "--> 7.4 - Configure GitLab DB Settings"
+echo "--> 8.4 - Configure GitLab DB Settings"
 
 # PostgreSQL only:
 sudo -u git cp config/database.yml.postgresql config/database.yml
@@ -220,12 +232,12 @@ sudo -u git cp config/database.yml.postgresql config/database.yml
 sudo -u git -H chmod o-rwx config/database.yml
 
 
-echo "--> 7.5 - Install Gems"
+echo "--> 8.5 - Install Gems"
 # For PostgreSQL (note, the option says "without ... mysql")
 sudo -u git -H bundle install --deployment --without development test mysql aws kerberos
 
 
-echo "--> 7.6 - Install GitLab Shell"
+echo "--> 8.6 - Install GitLab Shell"
 # Run the installation task for gitlab-shell (replace `REDIS_URL` if needed):
 ###sudo -u git -H bundle exec rake gitlab:shell:install REDIS_URL=unix:/var/run/redis/redis.sock RAILS_ENV=production SKIP_STORAGE_VALIDATION=true
 sudo -u git -H bundle exec rake gitlab:shell:install REDIS_URL=redis://127.0.0.1:6379 RAILS_ENV=production SKIP_STORAGE_VALIDATION=true
@@ -234,7 +246,7 @@ sudo -u git -H bundle exec rake gitlab:shell:install REDIS_URL=redis://127.0.0.1
 sudo -u git -H sed -i -e 's/^gitlab_url:.*/gitlab_url: http:\/\/localhost:8080\//g'  /home/git/gitlab-shell/config.yml
 
 
-echo "--> 7.7 - Install gitlab-workhorse"
+echo "--> 8.7 - Install gitlab-workhorse"
 
 #cd /home/git/gitlab
 #sudo gem install haml_lint
@@ -250,58 +262,59 @@ sudo make install
 
 
 
-echo "--> 7.8 - Initialize Database and Activate Advanced Features"
+echo "--> 8.8 - Initialize Database and Activate Advanced Features"
 cd /home/git/gitlab
 
 # set the Administrator/root password
 echo "yes" | sudo -u git -H bundle exec rake gitlab:setup RAILS_ENV=production GITLAB_ROOT_PASSWORD=password
 
 
-echo "--> 7.9 - Secure secrets.yml (SKIP for demo purpose)"
+echo "--> 8.9 - Secure secrets.yml (SKIP for demo purpose)"
 
-echo "--> 7.10 - Install Init Script"
+echo "--> 8.10 - Install Init Script"
 sudo cp lib/support/init.d/gitlab /etc/init.d/gitlab
 LC_ALL=en_US.UTF-8  sudo update-rc.d gitlab defaults 21
 
 
-echo "--> 7.11 - Setup Logrotate"
+echo "--> 8.11 - Setup Logrotate"
 sudo cp lib/support/logrotate/gitlab /etc/logrotate.d/gitlab
 
-echo "--> 7.12 - Check Application Status"
+echo "--> 8.12 - Check Application Status"
 sudo -u git -H bundle exec rake gitlab:env:info RAILS_ENV=production
 
-echo "--> 7.13 - Compile Assets"
-sudo -u git -H bundle exec rake assets:precompile RAILS_ENV=production
+echo "--> 8.13 - Compile Assets"
+sudo -u git -H yarn install --production --pure-lockfile
+sudo -u git -H bundle exec rake gitlab:assets:compile RAILS_ENV=production NODE_ENV=production
 
-echo "--> 7.14 - Fix repo paths access"
+echo "--> 8.14 - Fix repo paths access"
 sudo chmod -R ug+rwX,o-rwx  /home/git/repositories/
 sudo chmod -R ug-s          /home/git/repositories/
 sudo find /home/git/repositories/ -type d -print0 | sudo xargs -0 chmod g+s
 
 
-echo "--> 7.15 - Start Your GitLab Instance"
+echo "--> 8.15 - Start Your GitLab Instance"
 sudo service gitlab start
 # or
 #sudo /etc/init.d/gitlab restart
 
 
 echo "===================================================================="
-echo "==> 8 - Nginx"
+echo "==> 9 - Nginx"
 
-echo "--> 8.1 - Installation"
+echo "--> 9.1 - Installation"
 sudo apt-get install -y nginx
 
-echo "--> 8.2 - Site Configuration"
+echo "--> 9.2 - Site Configuration"
 sudo cp lib/support/nginx/gitlab /etc/nginx/sites-available/gitlab
 sudo ln -s /etc/nginx/sites-available/gitlab /etc/nginx/sites-enabled/gitlab
 sudo rm -f /etc/nginx/sites-available/default
 
-echo "--> 8.3 - Restart"
+echo "--> 9.3 - Restart"
 sudo service nginx restart
 
 
 echo "===================================================================="
-echo "==> 9 - Double-check Application Status"
+echo "==> 10 - Double-check Application Status"
 
 cd /home/git/gitlab
 ./bin/check

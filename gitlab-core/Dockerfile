@@ -6,9 +6,9 @@
 FROM ruby:2.3.3
 MAINTAINER William Yeh "william.pjyeh@gmail.com"
 
-ENV GIT_VERSION          2.8.4
+ENV GIT_VERSION          2.12.0
 ENV GIT_TARBALL_URL      https://www.kernel.org/pub/software/scm/git/git-$GIT_VERSION.tar.gz
-ENV GITLAB_VERSION       8-14-stable
+ENV GITLAB_VERSION       8-16-stable
 ENV GITLAB_CE_URL=https://gitlab.com/gitlab-org/gitlab-ce.git
 
 WORKDIR /tmp
@@ -45,18 +45,18 @@ RUN \
     rm -rf git-$GIT_VERSION*
 
 RUN \
-    echo "==> 7 - GitLab"  && \
+    echo "==> 8 - GitLab"  && \
     \
-    echo "--> 7.1 - We'll install GitLab into home directory of the user 'git' "  && \
+    echo "--> 8.1 - We'll install GitLab into home directory of the user 'git' "  && \
     mkdir -p /home/git  && \
     cd /home/git        && \
     \
     \
-    echo "--> 7.2 - Clone GitLab repository"            && \
+    echo "--> 8.2 - Clone GitLab repository"            && \
     git clone $GITLAB_CE_URL -b $GITLAB_VERSION gitlab  && \
     \
     \
-    echo "--> 7.3 - Configure GitLab..."  && \
+    echo "--> 8.3 - Configure GitLab..."  && \
     \
     # Go to GitLab installation folder
     cd /home/git/gitlab  && \
@@ -125,7 +125,7 @@ RUN \
     sed -i -e 's/localhost:6379/0.0.0.0:6379/g'  config/resque.yml  && \
     sed -i -e 's/  url:.*/  url: redis:\/\/0.0.0.0:6379/g'  config/resque.yml  && \
     \
-    echo "--> 7.4 - Configure GitLab DB Settings"  && \
+    echo "--> 8.4 - Configure GitLab DB Settings"  && \
     \
     # PostgreSQL only:
     cp config/database.yml.postgresql config/database.yml  && \
@@ -133,7 +133,7 @@ RUN \
     # Make config/database.yml readable to git only
     #chmod o-rwx config/database.yml
     \
-    echo "--> 7.5 - Install Gems"  && \
+    echo "--> 8.5 - Install Gems"  && \
     # For PostgreSQL (note, the option says "without ... mysql")
     bundle install --deployment --without development test mysql aws kerberos
 

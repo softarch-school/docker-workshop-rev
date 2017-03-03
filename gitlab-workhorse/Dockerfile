@@ -4,7 +4,7 @@
 # @see https://gitlab.com/gitlab-org/gitlab-workhorse
 
 
-FROM golang:1.7.4
+FROM golang:1.7.5
 MAINTAINER William Yeh "william.pjyeh@gmail.com"
 
 

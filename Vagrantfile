@@ -14,7 +14,7 @@ Vagrant.configure(2) do |config|
     sudo apt-get install -y software-properties-common
     sudo add-apt-repository -y ppa:chris-lea/redis-server
     sudo apt-get update
-    sudo apt-get install -y 'redis-server=3:3.0.7*'
+    sudo apt-get install -y 'redis-server=3:3.2.8*'
     sudo service redis-server stop
   SHELL
 

@@ -3,12 +3,12 @@
 
 ## Build
 
-### Utilize official Golang image 1.7.4
+### Utilize official Golang image 1.7.5
 
 From: [Official Golang image](https://hub.docker.com/_/golang/)
 
-Image: `golang:1.7.4`
-Dockerfile: [1.7.4](https://github.com/docker-library/golang/blob/2372c8cafe9cc958bade33ad0b8b54de8869c21f/1.7/Dockerfile)
+Image: `golang:1.7.5`
+Dockerfile: [1.7.5](https://github.com/docker-library/golang/blob/349270dbc128e396888cb2423ffc85d2c3039a27/1.7/Dockerfile)
 
 
 
@@ -44,9 +44,9 @@ Consider pros and cons for each of the following selection:
 
 3. OS base image (e.g., `debian:jessie`).
 
-4. Normal Golang base image (e.g., `golang:1.7.4`).
+4. Normal Golang base image (e.g., `golang:1.7.5`).
 
-5. Onbuild Golang base image (e.g., `golang:1.7.4-onbuild`).
+5. Onbuild Golang base image (e.g., `golang:1.7.5-onbuild`).
 
 
 
